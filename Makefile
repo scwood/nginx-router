@@ -1,15 +1,17 @@
-name = nginx-router
+host = dockerhost
 image = scwood/nginx-router
+ip = $(shell docker-machine ip default)
+location = /etc/nginx/conf.d/default.conf
+name = nginx-router
 portOptions = 80:80
 volume = $(CURDIR)/default.conf
-location = /etc/nginx/conf.d/default.conf
 
 stop:
 	docker stop $(name) || true
 remove: stop
 	docker rm $(name) || true
 run: remove
-	docker run -d --name $(name) -p $(portOptions) -v $(volume):$(location) $(image)
+	docker run -d --name $(name) -p $(portOptions) -v $(volume):$(location) --add-host $(host):$(ip) $(image)
 enter:
 	docker exec -it $(name) /bin/bash
 build:
