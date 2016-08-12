@@ -1,24 +1,24 @@
-host = dockerhost
-image = scwood/nginx-router
-ip = $(shell docker-machine ip default)
 location = /etc/nginx/conf.d/default.conf
 name = nginx-router
-portOptions = 80:80
+hostPort = 80
+containerPort = 80
 volume = $(CURDIR)/default.conf
 
 stop:
 	docker stop $(name) || true
 remove: stop
 	docker rm $(name) || true
+removeImage: remove
+	docker rmi $(name) || true
+run: ip = $(shell curl ifconfig.me)
 run: remove
-	docker run -d --name $(name) -p $(portOptions) -v $(volume):$(location) --add-host $(host):$(ip) $(image)
+	docker run -d --name $(name) --add-host dockerhost:$(ip) \
+		-p $(hostPort):$(containerPort) -v $(volume):$(location) $(name)
 enter:
 	docker exec -it $(name) /bin/bash
-build:
+build: removeImage
 	docker build -t $(name) .
-tag:
-	docker tag nginx-router scwood/nginx-router:latest
-push: build tag
-	docker push $(image)
 reload:
 	docker exec -it $(name) nginx -s reload
+logs:
+	docker logs $(name)
